@@ -44,6 +44,11 @@ app.use(express.urlencoded({ extended: true })); // Parse form data
 app.use(express.json());
 app.use(cookieParser());
 
+
+app.get("/test", (req, res) => {
+  res.send("Hello from server");
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoute);
 app.use("/api/post", postRoutes);
