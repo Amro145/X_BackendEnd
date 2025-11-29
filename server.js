@@ -56,11 +56,6 @@ app.use(
   })
 );
 
-app.listen(process.env.PORT || 8000, () => {
-  console.log(`Server is running on port ${process.env.PORT || 8000}`);
-  ConnectToDb();
-});
-
 app.use(express.urlencoded({ extended: true })); // Parse form data
 app.use(express.json());
 app.use(cookieParser());
@@ -94,3 +89,16 @@ app.use((err, req, res, next) => {
     message: err.message || "Internal Server Error",
   }); // Render the error page with the error object
 });
+
+// Connect to DB immediately for Serverless environments
+ConnectToDb();
+
+// Export app for Vercel
+export default app;
+
+// Only listen if not running on Vercel
+if (!process.env.VERCEL) {
+  app.listen(process.env.PORT || 8000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 8000}`);
+  });
+}

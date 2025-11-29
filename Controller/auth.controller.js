@@ -32,6 +32,8 @@ export const signup = async (req, res) => {
       await newUser.save()
       genTokenAndSetCookie(newUser._id, res)
 
+      // Remove password from response
+      newUser.password = undefined;
       return res.status(201).json(newUser)
 
     } else {
@@ -55,6 +57,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
     genTokenAndSetCookie(user._id, res)
+    user.password = undefined;
     return res.status(200).json(user)
 
   } catch (error) {
@@ -72,7 +75,7 @@ export const logout = async (req, res) => {
 };
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(req.user._id).select("-password")
     return res.status(200).json(user)
   } catch (error) {
     return res.status(500).json({ message: "Error in get Me ", error })
