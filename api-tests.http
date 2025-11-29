@@ -1,0 +1,144 @@
+### X Backend API Tests
+### Use VS Code REST Client extension to run these
+
+@baseUrl = http://localhost:8000
+@contentType = application/json
+
+###############################################
+# AUTHENTICATION ROUTES
+###############################################
+
+### 1. Signup - Register new user
+POST {{baseUrl}}/api/auth/signup
+Content-Type: {{contentType}}
+
+{
+  "userName": "testuser",
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+### 2. Login - Get authentication token
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+### 3. Check Auth - Get current user
+GET {{baseUrl}}/api/auth/check
+
+### 4. Logout
+GET {{baseUrl}}/api/auth/logout
+
+###############################################
+# POST ROUTES
+###############################################
+
+### 5. Create Post - Text only
+POST {{baseUrl}}/api/post/createpost
+Content-Type: {{contentType}}
+
+{
+  "text": "This is my first post! 🚀"
+}
+
+### 6. Create Post - With text and image
+POST {{baseUrl}}/api/post/createpost
+Content-Type: {{contentType}}
+
+{
+  "text": "Check out this amazing view! 🌅",
+  "image": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+}
+
+### 7. Get All Posts
+GET {{baseUrl}}/api/post/all
+
+### 8. Get Single Post (replace :id with actual post ID)
+GET {{baseUrl}}/api/post/post/674a1b2c3d4e5f6789abcdef
+
+### 9. Get Following Posts
+GET {{baseUrl}}/api/post/following
+
+### 10. Get User Posts (replace :userid with actual user ID)
+GET {{baseUrl}}/api/post/user/674a1b2c3d4e5f6789abcdef
+
+### 11. Get Liked Posts
+GET {{baseUrl}}/api/post/liked
+
+### 12. Like/Unlike Post (replace :id with actual post ID)
+PUT {{baseUrl}}/api/post/like/674a1b2c3d4e5f6789abcdef
+
+### 13. Comment on Post (replace :id with actual post ID)
+POST {{baseUrl}}/api/post/comment/674a1b2c3d4e5f6789abcdef
+Content-Type: {{contentType}}
+
+{
+  "text": "Great post! 🔥"
+}
+
+### 14. Delete Post (replace :id with actual post ID)
+DELETE {{baseUrl}}/api/post/674a1b2c3d4e5f6789abcdef
+
+###############################################
+# USER ROUTES
+###############################################
+
+### 15. Get User Profile (replace :id with actual user ID)
+GET {{baseUrl}}/api/users/profile/674a1b2c3d4e5f6789abcdef
+
+### 16. Follow/Unfollow User (replace :id with actual user ID)
+POST {{baseUrl}}/api/users/follow/674a1b2c3d4e5f6789abcdef
+
+### 17. Get Suggested Users
+GET {{baseUrl}}/api/users/suggested
+
+### 18. Update Profile
+PUT {{baseUrl}}/api/users/updateProfile
+Content-Type: {{contentType}}
+
+{
+  "userName": "updatedUsername",
+  "bio": "Updated bio text",
+  "link": "https://mywebsite.com",
+  "profilePic": "",
+  "coverPic": ""
+}
+
+### 19. Update Password
+PUT {{baseUrl}}/api/users/updatePassword
+Content-Type: {{contentType}}
+
+{
+  "oldPassword": "password123",
+  "password": "newPassword123"
+}
+
+### 20. Get Following (replace :id with actual user ID)
+GET {{baseUrl}}/api/users/following/674a1b2c3d4e5f6789abcdef
+
+### 21. Get Followers (replace :id with actual user ID)
+GET {{baseUrl}}/api/users/followers/674a1b2c3d4e5f6789abcdef
+
+###############################################
+# NOTIFICATION ROUTES
+###############################################
+
+### 22. Get All Notifications
+GET {{baseUrl}}/api/notifiction/
+
+### 23. Delete All Notifications
+DELETE {{baseUrl}}/api/notifiction/
+
+### 24. Delete Single Notification (replace :id with actual notification ID)
+DELETE {{baseUrl}}/api/notifiction/674a1b2c3d4e5f6789abcdef
+
+###############################################
+# TEST ENDPOINT
+###############################################
+
+### 25. Test Server
+GET {{baseUrl}}/test

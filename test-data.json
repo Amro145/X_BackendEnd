@@ -1,0 +1,67 @@
+{
+    "users": [
+        {
+            "userName": "john_doe",
+            "email": "john@example.com",
+            "password": "password123",
+            "bio": "Software developer and tech enthusiast",
+            "profilePic": "",
+            "coverPic": ""
+        },
+        {
+            "userName": "jane_smith",
+            "email": "jane@example.com",
+            "password": "password123",
+            "bio": "Designer and creative thinker",
+            "profilePic": "",
+            "coverPic": ""
+        },
+        {
+            "userName": "alex_wilson",
+            "email": "alex@example.com",
+            "password": "password123",
+            "bio": "Travel blogger and photographer",
+            "profilePic": "",
+            "coverPic": ""
+        }
+    ],
+    "posts": [
+        {
+            "text": "Just launched my new project! Check it out 🚀",
+            "image": ""
+        },
+        {
+            "text": "Beautiful sunset today 🌅",
+            "image": ""
+        },
+        {
+            "text": "Coding late night again... ☕💻",
+            "image": ""
+        },
+        {
+            "text": "Just finished reading an amazing book!",
+            "image": ""
+        },
+        {
+            "text": "Weekend vibes 🎉",
+            "image": ""
+        }
+    ],
+    "comments": [
+        {
+            "text": "This is amazing! 🔥"
+        },
+        {
+            "text": "Great work!"
+        },
+        {
+            "text": "Love this! 😍"
+        },
+        {
+            "text": "Keep it up!"
+        },
+        {
+            "text": "Awesome content!"
+        }
+    ]
+}

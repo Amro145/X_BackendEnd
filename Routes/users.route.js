@@ -1,6 +1,6 @@
 import express from "express"
 import { protectRoute } from "../MiddleWare/protectRoute.js"
-import { followUnFollowUser, isGetSuggestedUser, getUsersProfile, updateProfile, updatePassword, getFollowing, getFollowers } from "../Contorller/users.controller.js"
+import { followUnFollowUser, isGetSuggestedUser, getUsersProfile, updateProfile, updatePassword, getFollowing, getFollowers } from "../Controller/users.controller.js"
 const router = express.Router()
 
 router.get("/profile/:id", protectRoute, getUsersProfile)

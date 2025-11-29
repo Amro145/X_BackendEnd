@@ -1,0 +1,594 @@
+{
+    "info": {
+        "name": "X Backend API",
+        "description": "Complete API collection for X Backend (Twitter clone)",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Signup",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userName\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/auth/signup",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "auth",
+                                "signup"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/auth/login",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Check Auth",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/auth/check",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "auth",
+                                "check"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/auth/logout",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Posts",
+            "item": [
+                {
+                    "name": "Create Post",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"text\": \"This is my first post! 🚀\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/createpost",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "createpost"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/all",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "all"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Single Post",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/post/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "post",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Following Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/following",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "following"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get User Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/user/:userid",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "user",
+                                ":userid"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "userid",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Liked Posts",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/liked",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "liked"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Like/Unlike Post",
+                    "request": {
+                        "method": "PUT",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/like/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "like",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Comment on Post",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"text\": \"Great post! 🔥\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/comment/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                "comment",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Post",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "http://localhost:8000/api/post/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "post",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Get User Profile",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/profile/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "profile",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Follow/Unfollow User",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/follow/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "follow",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Suggested Users",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/suggested",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "suggested"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userName\": \"updatedUsername\",\n  \"bio\": \"Updated bio\",\n  \"link\": \"https://mywebsite.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/updateProfile",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "updateProfile"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Password",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"oldPassword\": \"password123\",\n  \"password\": \"newPassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/updatePassword",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "updatePassword"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Following",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/following/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "following",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Followers",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/users/followers/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "users",
+                                "followers",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "item": [
+                {
+                    "name": "Get All Notifications",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "http://localhost:8000/api/notifiction/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "notifiction",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete All Notifications",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "http://localhost:8000/api/notifiction/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "notifiction",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Single Notification",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "http://localhost:8000/api/notifiction/:id",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "notifiction",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "674a1b2c3d4e5f6789abcdef"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -171,8 +171,8 @@ export const updatePassword = async (req, res) => {
 
         return res.status(200).json(updateData)
     } catch (error) {
-        console.log(error);
-
+        console.log("Error in update password:", error);
+        return res.status(500).json({ message: "Error in update password" })
     }
 }
 export const getFollowing = async (req, res) => {

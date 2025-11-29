@@ -35,25 +35,25 @@ const UserSchema = new mongoose.Schema({
         },
     ],
     profilePic: {
-        type: "String",
+        type: String,
         default: "",
     },
     coverPic: {
-        type: "String",
+        type: String,
         default: "",
     },
     bio: {
-        type: "String",
+        type: String,
         default: "",
     },
     link: {
-        type: "String",
+        type: String,
         default: "",
     },
     likedPosts: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Post",
             default: [],
         },
     ],

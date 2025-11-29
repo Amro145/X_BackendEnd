@@ -1,6 +1,6 @@
 import express from "express"
 import { protectRoute } from "../MiddleWare/protectRoute.js"
-import { commentOnPost, createPost, deletePost, getAllPosts, getFollowingPosts, getLikedPosts, getOnePost, getUserPosts, likeUnlike } from "../Contorller/post.controller.js"
+import { commentOnPost, createPost, deletePost, getAllPosts, getFollowingPosts, getLikedPosts, getOnePost, getUserPosts, likeUnlike } from "../Controller/post.controller.js"
 const router = express.Router()
 
 router.post("/createpost", protectRoute, createPost)

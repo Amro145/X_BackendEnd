@@ -24,7 +24,8 @@ const notifictionSchema = new mongoose.Schema({
         type: String,
     },
     post: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
     }
 }, { timestamps: true })
 const Notification = mongoose.model("notifiction", notifictionSchema)
