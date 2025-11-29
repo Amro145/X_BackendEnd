@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.local
+.git
+.gitignore
+npm-debug.log
+.DS_Store
+*.log
+coverage
+.vscode
+.idea
+test-data.json
+api-tests.http
+cookies.txt
+BUG_REPORT_AND_FIXES.md
+API_TESTING_GUIDE.md
+ENV_SETUP_GUIDE.md
