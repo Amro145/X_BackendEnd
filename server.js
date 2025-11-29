@@ -70,6 +70,18 @@ app.get("/test", (req, res) => {
   res.send("Hello from server");
 });
 
+// Debug endpoint to check environment variables
+app.get("/debug-env", (req, res) => {
+  res.json({
+    hasMongoUrl: !!process.env.MONGO_URL,
+    mongoUrlLength: process.env.MONGO_URL ? process.env.MONGO_URL.length : 0,
+    hasJwtSecret: !!process.env.JWT_SECRET_KEY,
+    hasCloudinary: !!process.env.CLOUDINARY_NAME,
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoute);
 app.use("/api/post", postRoutes);
