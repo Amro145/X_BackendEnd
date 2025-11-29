@@ -20,12 +20,17 @@ cloudinary.config({
 const app = express();
 
 // CORS configuration - supports both development and production
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [
-    process.env.FRONTEND_URL || 'https://your-frontend.vercel.app', // Production frontend
-    'https://your-custom-domain.com' // Optional: add your custom domain
-  ]
-  : ['http://localhost:5173', 'http://localhost:3000']; // Development
+let allowedOrigins = [];
+
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+  }
+  // Add any other production domains if necessary, e.g., custom domains
+  // allowedOrigins.push('https://your-custom-domain.com');
+} else {
+  allowedOrigins.push('http://localhost:5173', 'http://localhost:3000'); // Development
+}
 
 app.use(
   cors({
@@ -34,7 +39,7 @@ app.use(
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}.`;
         return callback(new Error(msg), false);
       }
       return callback(null, true);

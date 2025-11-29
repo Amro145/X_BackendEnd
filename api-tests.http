@@ -1,7 +1,7 @@
 ### X Backend API Tests
 ### Use VS Code REST Client extension to run these
 
-@baseUrl = http://localhost:8000
+@baseUrl = https://x-backend-end.vercel.app
 @contentType = application/json
 
 ###############################################
@@ -14,7 +14,7 @@ Content-Type: {{contentType}}
 
 {
   "userName": "testuser",
-  "email": "testuser@example.com",
+  "email": "testuser2@example.com",
   "password": "password123"
 }
 
