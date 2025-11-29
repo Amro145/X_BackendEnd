@@ -41,8 +41,11 @@ export const signup = async (req, res) => {
     }
 
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Error in signup", error })
+    console.log("Signup Error:", error);
+    return res.status(500).json({
+      message: "Error in signup",
+      error: error.message || "Unknown error"
+    })
   }
 };
 export const login = async (req, res) => {
