@@ -3,7 +3,10 @@ import Notification from "../Models/notification.model.js"
 import Post from "../Models/post.model.js"
 import { v2 as cloudinary } from "cloudinary"
 
+import { ConnectToDb } from "../lib/db.js"
+
 export const createPost = async (req, res) => {
+    await ConnectToDb();
     try {
         const { text } = req.body
         let { image } = req.body
@@ -53,6 +56,7 @@ export const createPost = async (req, res) => {
     }
 }
 export const deletePost = async (req, res) => {
+    await ConnectToDb();
     try {
         const postId = req.params.id
         const post = await Post.findById(postId)
@@ -79,6 +83,7 @@ export const deletePost = async (req, res) => {
     }
 }
 export const commentOnPost = async (req, res) => {
+    await ConnectToDb();
     try {
         const me = req.user;
         const postId = req.params.id;
@@ -129,6 +134,7 @@ export const commentOnPost = async (req, res) => {
 };
 
 export const likeUnlike = async (req, res) => {
+    await ConnectToDb();
     try {
         console.log("User in likeUnlike:", req.user); // Debug log
         const me = req.user;
@@ -193,6 +199,7 @@ export const likeUnlike = async (req, res) => {
 };
 
 export const getAllPosts = async (req, res) => {
+    await ConnectToDb();
     try {
         const posts = await Post.find().sort({ createdAt: -1 })
             .populate({ path: "user", select: "-password" })
@@ -210,6 +217,7 @@ export const getAllPosts = async (req, res) => {
     }
 }
 export const getOnePost = async (req, res) => {
+    await ConnectToDb();
     try {
         const { id } = req.params
         const post = await Post.findById(id).sort({ createdAt: -1 })
@@ -227,6 +235,7 @@ export const getOnePost = async (req, res) => {
     }
 }
 export const getLikedPosts = async (req, res) => {
+    await ConnectToDb();
     try {
         const me = req.user
         if (!me) return res.status(404).json({ message: "user not found" })
@@ -244,6 +253,7 @@ export const getLikedPosts = async (req, res) => {
 
 }
 export const getFollowingPosts = async (req, res) => {
+    await ConnectToDb();
     try {
         const me = req.user
         if (!me) return res.status(404).json({ message: "user not found" })
@@ -261,6 +271,7 @@ export const getFollowingPosts = async (req, res) => {
     }
 }
 export const getUserPosts = async (req, res) => {
+    await ConnectToDb();
     try {
         const userId = req.params.userid
         const user = await User.findById(userId)

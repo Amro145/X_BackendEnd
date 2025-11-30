@@ -1,5 +1,8 @@
 import Notification from "../Models/notification.model.js"
+import { ConnectToDb } from "../lib/db.js"
+
 export const getNotifictions = async (req, res) => {
+    await ConnectToDb();
     try {
         const me = req.user
         if (!me) return res.status(404).json({ message: "user not found" });
@@ -19,6 +22,7 @@ export const getNotifictions = async (req, res) => {
     }
 }
 export const deleteNotifictions = async (req, res) => {
+    await ConnectToDb();
     const me = req.user
     try {
         await Notification.deleteMany({ to: me._id })
@@ -32,6 +36,7 @@ export const deleteNotifictions = async (req, res) => {
     }
 }
 export const deleteOneNotifiction = async (req, res) => {
+    await ConnectToDb();
     try {
         const notifictionId = req.params.id;
         const me = req.user;

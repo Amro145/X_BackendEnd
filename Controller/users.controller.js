@@ -3,7 +3,10 @@ import User from "../Models/auth.model.js"
 import Notfication from "../Models/notification.model.js"
 import bcrypt from "bcryptjs"
 
+import { ConnectToDb } from "../lib/db.js"
+
 export const getUsersProfile = async (req, res) => {
+    await ConnectToDb();
     const { id } = req.params
     try {
         const user = await User.findById(id).select("-password")
@@ -19,6 +22,7 @@ export const getUsersProfile = async (req, res) => {
     }
 }
 export const followUnFollowUser = async (req, res) => {
+    await ConnectToDb();
     try {
         const { id } = req.params
         const selectedUser = await User.findById(id)
@@ -68,6 +72,7 @@ export const followUnFollowUser = async (req, res) => {
     }
 }
 export const isGetSuggestedUser = async (req, res) => {
+    await ConnectToDb();
     try {
         const me = req.user
         const myfollowinglist = await User.findById(me._id).select("following")
@@ -98,6 +103,7 @@ export const isGetSuggestedUser = async (req, res) => {
 
 }
 export const updateProfile = async (req, res) => {
+    await ConnectToDb();
     let { userName, email, bio, link, profilePic, coverPic } = req.body;
     const Id = req.user._id;
     const user = await User.findById(Id);
@@ -140,6 +146,7 @@ export const updateProfile = async (req, res) => {
     }
 };
 export const updatePassword = async (req, res) => {
+    await ConnectToDb();
     const Id = req.user._id
     const user = await User.findById(Id)
     let { password, oldPassword } = req.body
@@ -176,6 +183,7 @@ export const updatePassword = async (req, res) => {
     }
 }
 export const getFollowing = async (req, res) => {
+    await ConnectToDb();
     const { id } = req.params
     try {
         const user = await User.findById(id).populate("following", "-password")
@@ -192,6 +200,7 @@ export const getFollowing = async (req, res) => {
     }
 }
 export const getFollowers = async (req, res) => {
+    await ConnectToDb();
     const { id } = req.params
     try {
         const user = await User.findById(id).populate("followers", "-password")
