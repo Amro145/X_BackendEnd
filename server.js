@@ -20,18 +20,15 @@ cloudinary.config({
 const app = express();
 
 // CORS configuration - supports both development and production
-let allowedOrigins = [];
+// CORS configuration
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://x-client-red.vercel.app',
+    'http://localhost:3000' // Keeping this as it's a common dev port
+];
 
-if (process.env.NODE_ENV === 'production') {
-    if (process.env.FRONTEND_URL) {
-        allowedOrigins.push(process.env.FRONTEND_URL);
-    }
-    // *** الرابط الجديد الذي طلبه المستخدم ***
-    allowedOrigins.push('https://x-client-red.vercel.app');
-    // Add any other production domains if necessary, e.g., custom domains
-    // allowedOrigins.push('https://your-custom-domain.com');
-} else {
-    allowedOrigins.push('http://localhost:5173', 'http://localhost:3000'); // Development
+if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
 app.use(
