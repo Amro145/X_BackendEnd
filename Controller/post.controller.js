@@ -111,14 +111,16 @@ export const commentOnPost = async (req, res) => {
             .populate({ path: "comment.user", select: "-password" });
 
         // Create a notification for the post owner
-        const newNotification = new Notification({
-            from: me._id,
-            to: post.user,
-            type: "comment",
-            text: text,
-            post: post._id,
-        });
-        await newNotification.save();
+        if (me._id.toString() !== post.user.toString()) {
+            const newNotification = new Notification({
+                from: me._id,
+                to: post.user,
+                type: "comment",
+                text: text,
+                post: post._id,
+            });
+            await newNotification.save();
+        }
 
 
 
@@ -147,7 +149,7 @@ export const likeUnlike = async (req, res) => {
         }
 
         // Check if the user has already liked the post
-        const isLike = post.likes.includes(me._id);
+        const isLike = post.likes.some(id => id.toString() === me._id.toString());
 
         // If not liked, add the like
         if (!isLike) {
@@ -165,6 +167,7 @@ export const likeUnlike = async (req, res) => {
                     from: me._id,
                     to: post.user,
                     type: "like",
+                    post: postId,
                 });
                 await newNotification.save();
             }
@@ -275,11 +278,12 @@ export const getUserPosts = async (req, res) => {
     try {
         const userId = req.params.userid
         const user = await User.findById(userId)
+        if (!user) return res.status(404).json({ message: "user not found" })
+
         const userPosts = await Post.find({ user: { $in: user._id } })
             .populate({ path: "user", select: "-password" })
             .populate({ path: "likes", select: "-password" })
             .populate({ path: "comment.user", select: "-password" })
-        if (!user) return res.status(404).json({ message: "user not found" })
         return res.status(200).json(userPosts)
     } catch (error) {
         console.log("error in  get user post", error);

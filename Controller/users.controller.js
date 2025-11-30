@@ -37,7 +37,7 @@ export const followUnFollowUser = async (req, res) => {
             return res.status(400).json({ message: "You Can't Follow/UnFollow Your Self!" })
         }
         // check is me  following selectedUSer or no
-        const isFollowing = me.following.includes(id)
+        const isFollowing = me.following.some(fid => fid.toString() === id)
         if (isFollowing) {
             // un Following
             await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } })
@@ -87,7 +87,7 @@ export const isGetSuggestedUser = async (req, res) => {
             }
         }
         ])
-        const filtredUsers = users.filter(user => !myfollowinglist.following.includes(user._id))
+        const filtredUsers = users.filter(user => !myfollowinglist.following.some(fid => fid.toString() === user._id.toString()))
         const suggestedUser = filtredUsers.slice(0, 4)
         suggestedUser.forEach(user => {
             user.password = null
