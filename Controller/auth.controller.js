@@ -1,10 +1,8 @@
 import { genTokenAndSetCookie } from "../lib/genToken.js";
 import User from "../Models/auth.model.js";
 import bcrypt from "bcryptjs";
-import { ConnectToDb } from "../lib/db.js";
 
 export const signup = async (req, res) => {
-  await ConnectToDb();
   const { userName, email, password } = req.body
   try {
     // Validate required fields
@@ -51,7 +49,6 @@ export const signup = async (req, res) => {
   }
 };
 export const login = async (req, res) => {
-  await ConnectToDb();
   const { email, password } = req.body
   try {
     if (!email?.trim() || !password?.trim()) {
@@ -71,7 +68,6 @@ export const login = async (req, res) => {
   }
 };
 export const logout = async (req, res) => {
-  await ConnectToDb();
   try {
     res.cookie("jwt", "", { maxAge: 0 })
     return res.status(200).json({ message: "Logout Successfully" })
@@ -81,7 +77,6 @@ export const logout = async (req, res) => {
   }
 };
 export const getMe = async (req, res) => {
-  await ConnectToDb();
   try {
     const user = await User.findById(req.user._id).select("-password")
     return res.status(200).json(user)
