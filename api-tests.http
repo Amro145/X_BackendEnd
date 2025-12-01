@@ -13,9 +13,9 @@ POST {{baseUrl}}/api/auth/signup
 Content-Type: {{contentType}}
 
 {
-  "userName": "harith",
-  "email": "harith@example.com",
-  "password": "harith123"
+  "userName": "nasor",
+  "email": "nasor@example.com",
+  "password": "nasor123"
 }
 
 ### 2. Login - Get authentication token
