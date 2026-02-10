@@ -35,7 +35,7 @@ const seed = async () => {
         const usersData = [];
         for (let i = 0; i < USERS_COUNT; i++) {
             usersData.push({
-                userName: faker.internet.userName(),
+                userName: faker.internet.username(),
                 email: faker.internet.email(),
                 password: hashedPassword,
                 bio: faker.lorem.sentence(),

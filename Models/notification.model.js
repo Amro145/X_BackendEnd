@@ -28,5 +28,5 @@ const notifictionSchema = new mongoose.Schema({
         ref: "Post",
     }
 }, { timestamps: true })
-const Notification = mongoose.model("notifiction", notifictionSchema)
+const Notification = mongoose.model("Notification", notifictionSchema)
 export default Notification

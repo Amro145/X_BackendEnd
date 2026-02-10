@@ -2,13 +2,15 @@ import express from "express";
 import authRoutes from "./Routes/auth.route.js";
 import userRoute from "./Routes/users.route.js";
 import postRoutes from "./Routes/post.route.js";
-import notifictionRoutes from "./Routes/notifiction.route.js";
+import notificationRoutes from "./Routes/notification.route.js";
 import dotenv from "dotenv";
 import { ConnectToDb } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import compression from "compression";
 
 dotenv.config();
 
@@ -59,6 +61,8 @@ app.use(
 app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Parse form data
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
+app.use(helmet());
+app.use(compression());
 
 
 app.get("/test", (req, res) => {
@@ -100,7 +104,7 @@ app.use("/api/auth/login", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoute);
 app.use("/api/post", postRoutes);
-app.use("/api/notifiction", notifictionRoutes);
+app.use("/api/notification", notificationRoutes);
 
 // Global error-handling middleware
 app.use((err, req, res, next) => {
