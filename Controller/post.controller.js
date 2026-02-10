@@ -2,19 +2,26 @@ import User from "../Models/auth.model.js"
 import Notification from "../Models/notification.model.js"
 import Post from "../Models/post.model.js"
 import { v2 as cloudinary } from "cloudinary"
+import { asyncHandler } from "../MiddleWare/asyncHandler.js"
+import mongoose from "mongoose"
 
 
-export const createPost = async (req, res) => {
-
+export const createPost = asyncHandler(async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
         const { text } = req.body
         let { image } = req.body
         const myId = req.user._id
-        const me = await User.findById(myId)
+        const me = await User.findById(myId).session(session)
         if (!me) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({ message: "User Not Found" })
         }
         if (!text && !image) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({ message: "Post should be have text or image" })
         }
         if (image) {
@@ -27,22 +34,10 @@ export const createPost = async (req, res) => {
             image,
         })
 
-        await newPost.save()
+        await newPost.save({ session })
 
+        await session.commitTransaction();
 
-
-        if (me.followers && me.followers.length > 0) {
-            // Use for...of to ensure proper synchronization with async/await
-            for (const followerId of me.followers) {
-                const newNotification = new Notification({
-                    from: me._id,
-                    to: followerId,
-                    type: "post",
-                    post: newPost._id, // Include the post ID in the notification
-                });
-                await newNotification.save();
-            }
-        }
         const posts = await Post.find()
             .sort({ createdAt: -1 })
             .populate({ path: "user", select: "-password" })
@@ -50,240 +45,192 @@ export const createPost = async (req, res) => {
         return res.status(201).json(posts);
 
     } catch (error) {
+        await session.abortTransaction();
         console.log("error in create post", error);
-        return res.status(500).json({ message: "error in create post" })
+        throw error;
+    } finally {
+        session.endSession();
     }
-}
-export const deletePost = async (req, res) => {
+})
 
-    try {
-        const postId = req.params.id
-        const post = await Post.findById(postId)
-        if (!post) {
-            return res.status(404).json({ message: " post not found   " })
-        }
-        if (post.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ message: "You are not authorized" })
-        }
-        if (post.image) {
-            const imageId = post.image.split("/").pop().split(".")[0]
-            await cloudinary.uploader.destroy(imageId)
-        }
-        await Post.findByIdAndDelete(post._id)
-        const posts = await Post.find()
-            .sort({ createdAt: -1 })
-            .populate({ path: "user", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" });
-        return res.status(201).json(posts);
-
-    } catch (error) {
-        console.log("error in delete post", error);
-        return res.status(500).json({ message: "error in delete post" })
+export const deletePost = asyncHandler(async (req, res) => {
+    const postId = req.params.id
+    const post = await Post.findById(postId)
+    if (!post) {
+        return res.status(404).json({ message: " post not found   " })
     }
-}
-export const commentOnPost = async (req, res) => {
+    if (post.user.toString() !== req.user._id.toString()) {
+        return res.status(401).json({ message: "You are not authorized" })
+    }
+    if (post.image) {
+        const imageId = post.image.split("/").pop().split(".")[0]
+        await cloudinary.uploader.destroy(imageId)
+    }
+    await Post.findByIdAndDelete(post._id)
+    const posts = await Post.find()
+        .sort({ createdAt: -1 })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" });
+    return res.status(201).json(posts);
+})
 
-    try {
-        const me = req.user;
-        const postId = req.params.id;
-        const { text } = req.body;
+export const commentOnPost = asyncHandler(async (req, res) => {
+    const me = req.user;
+    const postId = req.params.id;
+    const { text } = req.body;
 
-        // Search for the post
-        const post = await Post.findById(postId);
-        if (!post) {
-            return res.status(404).json({ message: "Post not found" });
-        }
+    // Search for the post
+    const post = await Post.findById(postId);
+    if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+    }
 
-        // Check if the comment text exists
-        if (!text) {
-            return res.status(400).json({ message: "Comment text is required" });
-        }
+    // Check if the comment text exists
+    if (!text) {
+        return res.status(400).json({ message: "Comment text is required" });
+    }
 
-        // Add the comment to the post
-        const comment = { user: me._id, text };
-        post.comment.push(comment); // Ensure the field is correct in the schema (comment, not تعليق)
-        await post.save();
+    // Add the comment to the post
+    const comment = { user: me._id, text };
+    post.comment.push(comment);
+    await post.save();
 
-        // Return the specified post with comments
-        const updatedPost = await Post.findById(postId)
-            .populate({ path: "user", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" });
+    // Return the specified post with comments
+    const updatedPost = await Post.findById(postId)
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" });
+
+    // Create a notification for the post owner
+    if (me._id.toString() !== post.user.toString()) {
+        const newNotification = new Notification({
+            from: me._id,
+            to: post.user,
+            type: "comment",
+            text: text,
+            post: post._id,
+        });
+        await newNotification.save();
+    }
+
+    const posts = await Post.find()
+        .sort({ createdAt: -1 })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" });
+    return res.status(200).json(posts);
+})
+
+export const likeUnlike = asyncHandler(async (req, res) => {
+    console.log("User in likeUnlike:", req.user); // Debug log
+    const me = req.user;
+    const postId = req.params.id;
+
+    // Search for the post
+    const post = await Post.findById(postId);
+    if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Check if the user has already liked the post
+    const isLike = post.likes.some(id => id.toString() === me._id.toString());
+
+    // If not liked, add the like
+    if (!isLike) {
+        await Post.findByIdAndUpdate(postId, {
+            $push: { likes: me._id }
+        });
+
+        await User.findByIdAndUpdate(me._id, {
+            $push: { likedPosts: postId }
+        });
 
         // Create a notification for the post owner
         if (me._id.toString() !== post.user.toString()) {
             const newNotification = new Notification({
                 from: me._id,
                 to: post.user,
-                type: "comment",
-                text: text,
-                post: post._id,
+                type: "like",
+                post: postId,
             });
             await newNotification.save();
         }
 
-
-
+        // Return the updated post
         const posts = await Post.find()
             .sort({ createdAt: -1 })
             .populate({ path: "user", select: "-password" })
             .populate({ path: "comment.user", select: "-password" });
         return res.status(200).json(posts);
-    } catch (error) {
-        console.log("Error in adding comment:", error);
-        return res.status(500).json({ message: "Error in adding comment" });
-    }
-};
+    } else {
+        // If already liked, remove the like
+        await Post.findByIdAndUpdate(postId, {
+            $pull: { likes: me._id }
+        });
 
-export const likeUnlike = async (req, res) => {
+        await User.findByIdAndUpdate(me._id, {
+            $pull: { likedPosts: postId }
+        });
 
-    try {
-        console.log("User in likeUnlike:", req.user); // Debug log
-        const me = req.user;
-        const postId = req.params.id;
-
-        // Search for the post
-        const post = await Post.findById(postId);
-        if (!post) {
-            return res.status(404).json({ message: "Post not found" });
-        }
-
-        // Check if the user has already liked the post
-        const isLike = post.likes.some(id => id.toString() === me._id.toString());
-
-        // If not liked, add the like
-        if (!isLike) {
-            await Post.findByIdAndUpdate(postId, {
-                $push: { likes: me._id }
-            });
-
-            await User.findByIdAndUpdate(me._id, {
-                $push: { likedPosts: postId }
-            });
-
-            // Create a notification for the post owner
-            if (me._id.toString() !== post.user.toString()) {
-                const newNotification = new Notification({
-                    from: me._id,
-                    to: post.user,
-                    type: "like",
-                    post: postId,
-                });
-                await newNotification.save();
-            }
-
-            // Return the updated post
-            const posts = await Post.find()
-                .sort({ createdAt: -1 })
-                .populate({ path: "user", select: "-password" })
-                .populate({ path: "comment.user", select: "-password" });
-            return res.status(200).json(posts);
-        } else {
-            // If already liked, remove the like
-            await Post.findByIdAndUpdate(postId, {
-                $pull: { likes: me._id }
-            });
-
-            await User.findByIdAndUpdate(me._id, {
-                $pull: { likedPosts: postId }
-            });
-
-            // Return the updated post
-            const posts = await Post.find()
-                .sort({ createdAt: -1 })
-                .populate({ path: "user", select: "-password" })
-                .populate({ path: "comment.user", select: "-password" });
-            return res.status(200).json(posts);
-        }
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "Error in like/unlike", error });
-    }
-};
-
-export const getAllPosts = async (req, res) => {
-    try {
-        const posts = await Post.find().sort({ createdAt: -1 })
+        // Return the updated post
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
             .populate({ path: "user", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" })
-
-        if (posts.length === 0) {
-            return res.status(200).json([])
-        }
-        return res.status(200).json(posts)
-
-    } catch (error) {
-
-        console.log("error in  get all post", error);
-        return res.status(500).json({ message: "error in get all post" })
+            .populate({ path: "comment.user", select: "-password" });
+        return res.status(200).json(posts);
     }
-}
-export const getOnePost = async (req, res) => {
+})
 
-    try {
-        const { id } = req.params
-        const post = await Post.findById(id).sort({ createdAt: -1 })
-            .populate({ path: "user", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" })
-        if (!post) {
-            return res.status(400).json({ message: "Invalid Id" })
-        }
-        return res.status(200).json(post)
+export const getAllPosts = asyncHandler(async (req, res) => {
+    const posts = await Post.find().sort({ createdAt: -1 })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" })
 
-    } catch (error) {
-
-        console.log("error in  one all post", error);
-        return res.status(500).json({ message: "error in get one post" })
+    if (posts.length === 0) {
+        return res.status(200).json([])
     }
-}
-export const getLikedPosts = async (req, res) => {
+    return res.status(200).json(posts)
+})
 
-    try {
-        const me = req.user
-        if (!me) return res.status(404).json({ message: "user not found" })
-
-        const posts = await Post.find({ _id: { $in: me.likedPosts } })
-            .populate({ path: "user", select: "-password" })
-            .populate({ path: "likes", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" })
-        return res.status(200).json(posts)
-    } catch (error) {
-        console.log("error in  get liked post", error);
-        return res.status(500).json({ message: "error in get liked post" })
-
+export const getOnePost = asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const post = await Post.findById(id).sort({ createdAt: -1 })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" })
+    if (!post) {
+        return res.status(400).json({ message: "Invalid Id" })
     }
+    return res.status(200).json(post)
+})
 
-}
-export const getFollowingPosts = async (req, res) => {
-    try {
-        const me = req.user
-        if (!me) return res.status(404).json({ message: "user not found" })
-        const myfollowingId = me.following
-        const followingPosts = await Post.find({ user: { $in: myfollowingId } })
-            .populate({ path: "user", select: "-password" })
-            .populate({ path: "likes", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" })
-        return res.status(200).json(followingPosts)
-    } catch (error) {
-        console.log("error in  get following post", error);
-        return res.status(500).json({ message: "error in get following post" })
+export const getLikedPosts = asyncHandler(async (req, res) => {
+    const me = req.user
+    if (!me) return res.status(404).json({ message: "user not found" })
 
+    const posts = await Post.find({ _id: { $in: me.likedPosts } })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "likes", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" })
+    return res.status(200).json(posts)
+})
 
-    }
-}
-export const getUserPosts = async (req, res) => {
-    try {
-        const userId = req.params.userid
-        const user = await User.findById(userId)
-        if (!user) return res.status(404).json({ message: "user not found" })
+export const getFollowingPosts = asyncHandler(async (req, res) => {
+    const me = req.user
+    if (!me) return res.status(404).json({ message: "user not found" })
+    const myfollowingId = me.following
+    const followingPosts = await Post.find({ user: { $in: myfollowingId } })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "likes", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" })
+    return res.status(200).json(followingPosts)
+})
 
-        const userPosts = await Post.find({ user: { $in: user._id } })
-            .populate({ path: "user", select: "-password" })
-            .populate({ path: "likes", select: "-password" })
-            .populate({ path: "comment.user", select: "-password" })
-        return res.status(200).json(userPosts)
-    } catch (error) {
-        console.log("error in  get user post", error);
-        return res.status(500).json({ message: "error in get user post" })
-    }
+export const getUserPosts = asyncHandler(async (req, res) => {
+    const userId = req.params.userid
+    const user = await User.findById(userId)
+    if (!user) return res.status(404).json({ message: "user not found" })
 
-}
+    const userPosts = await Post.find({ user: { $in: user._id } })
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "likes", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" })
+    return res.status(200).json(userPosts)
+})

@@ -8,6 +8,7 @@ import { ConnectToDb } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -88,7 +89,14 @@ app.use(async (req, res, next) => {
         next(error);
     }
 });
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    message: "Too many requests from this IP, please try again later."
+});
 
+app.use("/api/auth/signup", authLimiter);
+app.use("/api/auth/login", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoute);
 app.use("/api/post", postRoutes);
