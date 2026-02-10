@@ -1,0 +1,144 @@
+@baseUrl = https://x-backend-end.vercel.app/
+# @baseUrl = https://x-backend-end.vercel.app
+
+### Test Root/Debug
+GET {{baseUrl}}/test
+
+### Debug Environment (Only for testing)
+GET {{baseUrl}}/debug-env
+
+####################
+# AUTH ENDPOINTS
+####################
+
+### Signup
+# @name signup
+POST {{baseUrl}}/api/auth/signup
+Content-Type: application/json
+
+{
+    "userName": "testuser_{{$timestamp}}",
+    "email": "test_{{$timestamp}}@example.com",
+    "password": "password123"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Check Auth (Get Me)
+GET {{baseUrl}}/api/auth/check
+
+### Logout
+GET {{baseUrl}}/api/auth/logout
+
+
+####################
+# POST ENDPOINTS
+####################
+
+### Get All Posts
+GET {{baseUrl}}/api/post/all
+
+### Create Post
+POST {{baseUrl}}/api/post/createpost
+Content-Type: application/json
+
+{
+    "text": "Hello world from REST Client!",
+    "image": ""
+}
+
+### Get One Post
+# Replace :id with a real post ID
+GET {{baseUrl}}/api/post/post/65c8f...
+
+### Get Following Posts
+GET {{baseUrl}}/api/post/following
+
+### Get User Posts
+# Replace :userid with a real user ID
+GET {{baseUrl}}/api/post/user/65c8f...
+
+### Get Liked Posts
+GET {{baseUrl}}/api/post/liked
+
+### Like/Unlike Post
+# Replace :id with a real post ID
+PUT {{baseUrl}}/api/post/like/65c8f...
+
+### Comment on Post
+# Replace :id with a real post ID
+POST {{baseUrl}}/api/post/comment/65c8f...
+Content-Type: application/json
+
+{
+    "text": "This is a test comment"
+}
+
+### Delete Post
+# Replace :id with a real post ID
+DELETE {{baseUrl}}/api/post/65c8f...
+
+
+####################
+# USER ENDPOINTS
+####################
+
+### Get Profile
+# Replace :id with a real user ID
+GET {{baseUrl}}/api/users/profile/65c8f...
+
+### Follow/Unfollow User
+# Replace :id with a real user ID
+POST {{baseUrl}}/api/users/follow/65c8f...
+
+### Get Suggested Users
+GET {{baseUrl}}/api/users/suggested
+
+### Update Profile
+PUT {{baseUrl}}/api/users/updateProfile
+Content-Type: application/json
+
+{
+    "bio": "New bio content",
+    "link": "https://example.com"
+}
+
+### Update Password
+PUT {{baseUrl}}/api/users/updatePassword
+Content-Type: application/json
+
+{
+    "oldPassword": "password123",
+    "password": "newpassword123"
+}
+
+### Get Following
+# Replace :id with a real user ID
+GET {{baseUrl}}/api/users/following/65c8f...
+
+### Get Followers
+# Replace :id with a real user ID
+GET {{baseUrl}}/api/users/followers/65c8f...
+
+
+####################
+# NOTIFICATION ENDPOINTS
+####################
+
+### Get Notifications
+GET {{baseUrl}}/api/notification
+
+### Delete All Notifications
+DELETE {{baseUrl}}/api/notification
+
+### Delete One Notification
+# Replace :id with a real notification ID
+DELETE {{baseUrl}}/api/notification/65c8f...

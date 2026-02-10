@@ -62,17 +62,17 @@ app.use(
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false,
+}));
 app.use(compression());
 
-// Temporarily disabling helmet to isolate the "invalid header" issue
-// app.use(helmet({
-//     crossOriginResourcePolicy: { policy: "cross-origin" },
-//     contentSecurityPolicy: false,
-//     crossOriginOpenerPolicy: false,
-//     crossOriginEmbedderPolicy: false,
-// }));
 
 
+app.get("/", (req, res) => {
+    res.status(200).json({ status: "ok", message: "Server is running" });
+});
 
 app.get("/test", (req, res) => {
     res.send("Hello from server");
@@ -87,21 +87,23 @@ app.get("/debug-env", (req, res) => {
         hasCloudinary: !!process.env.CLOUDINARY_NAME,
         nodeEnv: process.env.NODE_ENV,
         port: process.env.PORT,
-        allowedCORS: allowedOrigins // Added for debugging allowed origins
+        allowedCORS: allowedOrigins
     });
 });
 
-// Connect to DB for every request (Serverless optimization)
-app.use(async (req, res, next) => {
+// Connect to DB for protected routes
+const connectDbMiddleware = async (req, res, next) => {
     try {
         await ConnectToDb();
-
         next();
     } catch (error) {
         console.error("Database connection error:", error);
-        next(error);
+        return res.status(503).json({ message: "Database connection failed", error: error.message });
     }
-});
+};
+
+app.use("/api", connectDbMiddleware);
+
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
