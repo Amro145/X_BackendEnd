@@ -39,44 +39,39 @@ if (process.env.FRONTEND_URL) {
     }
 }
 
+// 1. CORS - MUST BE FIRST (after trust proxy)
 app.use(
     cors({
         origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps, curl, Postman)
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
+            // Check if origin is allowed
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
             } else {
-                // Instead of throwing error, we just don't allow it. 
-                // This prevents the error handler from sending a non-CORS response.
-                console.log(`CORS blocked for origin: ${origin}`);
-                return callback(null, false);
+                console.log(`CORS Error: Origin ${origin} not allowed`);
+                callback(null, false); // Deny but don't crash
             }
         },
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: [
-            "Content-Type",
-            "Authorization",
-            "Accept",
-            "X-Requested-With",
-            "x-access-token"
-        ],
-        optionsSuccessStatus: 200, // Explicitly set success status for OPTIONS
+        allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "x-access-token"],
+        optionsSuccessStatus: 200
     })
 );
 
-app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Parse form data
+// 2. Parsers and other middlewares
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    contentSecurityPolicy: false, // Disabling CSP for API to avoid interference
-    crossOriginOpenerPolicy: false,
-    crossOriginEmbedderPolicy: false,
-}));
 app.use(compression());
+
+// Temporarily disabling helmet to isolate the "invalid header" issue
+// app.use(helmet({
+//     crossOriginResourcePolicy: { policy: "cross-origin" },
+//     contentSecurityPolicy: false,
+//     crossOriginOpenerPolicy: false,
+//     crossOriginEmbedderPolicy: false,
+// }));
+
 
 
 app.get("/test", (req, res) => {
