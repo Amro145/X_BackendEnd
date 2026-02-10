@@ -59,8 +59,8 @@ app.use(
 );
 
 // 2. Parsers and other middlewares
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -78,18 +78,6 @@ app.get("/test", (req, res) => {
     res.send("Hello from server");
 });
 
-// Debug endpoint to check environment variables
-app.get("/debug-env", (req, res) => {
-    res.json({
-        hasMongoUrl: !!process.env.MONGO_URL,
-        mongoUrlLength: process.env.MONGO_URL ? process.env.MONGO_URL.length : 0,
-        hasJwtSecret: !!process.env.JWT_SECRET_KEY,
-        hasCloudinary: !!process.env.CLOUDINARY_NAME,
-        nodeEnv: process.env.NODE_ENV,
-        port: process.env.PORT,
-        allowedCORS: allowedOrigins
-    });
-});
 
 // Connect to DB for protected routes
 const connectDbMiddleware = async (req, res, next) => {

@@ -41,15 +41,13 @@ postSchema.post("save", async function (doc, next) {
 
         const me = await User.findById(doc.user).session(session);
         if (me && me.followers && me.followers.length > 0) {
-            for (const followerId of me.followers) {
-                const newNotification = new Notification({
-                    from: me._id,
-                    to: followerId,
-                    type: "post",
-                    post: doc._id,
-                });
-                await newNotification.save({ session });
-            }
+            const notifications = me.followers.map(followerId => ({
+                from: me._id,
+                to: followerId,
+                type: "post",
+                post: doc._id,
+            }));
+            await Notification.insertMany(notifications, { session });
         }
         // next() is not needed in async post middleware if promise is returned/awaited, but good practice if signature has (doc, next)
     } catch (error) {

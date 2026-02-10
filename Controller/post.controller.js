@@ -40,6 +40,7 @@ export const createPost = asyncHandler(async (req, res) => {
 
         const posts = await Post.find()
             .sort({ createdAt: -1 })
+            .limit(10)
             .populate({ path: "user", select: "-password" })
             .populate({ path: "comment.user", select: "-password" });
         return res.status(201).json(posts);
@@ -69,6 +70,7 @@ export const deletePost = asyncHandler(async (req, res) => {
     await Post.findByIdAndDelete(post._id)
     const posts = await Post.find()
         .sort({ createdAt: -1 })
+        .limit(10)
         .populate({ path: "user", select: "-password" })
         .populate({ path: "comment.user", select: "-password" });
     return res.status(201).json(posts);
@@ -114,6 +116,7 @@ export const commentOnPost = asyncHandler(async (req, res) => {
 
     const posts = await Post.find()
         .sort({ createdAt: -1 })
+        .limit(10)
         .populate({ path: "user", select: "-password" })
         .populate({ path: "comment.user", select: "-password" });
     return res.status(200).json(posts);
@@ -173,6 +176,7 @@ export const likeUnlike = asyncHandler(async (req, res) => {
         // Return the updated post
         const posts = await Post.find()
             .sort({ createdAt: -1 })
+            .limit(10)
             .populate({ path: "user", select: "-password" })
             .populate({ path: "comment.user", select: "-password" });
         return res.status(200).json(posts);
@@ -180,14 +184,25 @@ export const likeUnlike = asyncHandler(async (req, res) => {
 })
 
 export const getAllPosts = asyncHandler(async (req, res) => {
-    const posts = await Post.find().sort({ createdAt: -1 })
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" })
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    if (posts.length === 0) {
-        return res.status(200).json([])
-    }
-    return res.status(200).json(posts)
+    const posts = await Post.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" });
+
+    const total = await Post.countDocuments();
+
+    return res.status(200).json({
+        posts,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalPosts: total
+    });
 })
 
 export const getOnePost = asyncHandler(async (req, res) => {
@@ -205,7 +220,14 @@ export const getLikedPosts = asyncHandler(async (req, res) => {
     const me = req.user
     if (!me) return res.status(404).json({ message: "user not found" })
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const posts = await Post.find({ _id: { $in: me.likedPosts } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .populate({ path: "user", select: "-password" })
         .populate({ path: "likes", select: "-password" })
         .populate({ path: "comment.user", select: "-password" })
@@ -215,8 +237,16 @@ export const getLikedPosts = asyncHandler(async (req, res) => {
 export const getFollowingPosts = asyncHandler(async (req, res) => {
     const me = req.user
     if (!me) return res.status(404).json({ message: "user not found" })
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const myfollowingId = me.following
     const followingPosts = await Post.find({ user: { $in: myfollowingId } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .populate({ path: "user", select: "-password" })
         .populate({ path: "likes", select: "-password" })
         .populate({ path: "comment.user", select: "-password" })
@@ -228,7 +258,14 @@ export const getUserPosts = asyncHandler(async (req, res) => {
     const user = await User.findById(userId)
     if (!user) return res.status(404).json({ message: "user not found" })
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const userPosts = await Post.find({ user: { $in: user._id } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .populate({ path: "user", select: "-password" })
         .populate({ path: "likes", select: "-password" })
         .populate({ path: "comment.user", select: "-password" })
