@@ -21,6 +21,7 @@ cloudinary.config({
 });
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (necessary for Vercel/Heroku rate limiting)
 
 // CORS configuration - supports both development and production
 // CORS configuration
@@ -61,7 +62,9 @@ app.use(
 app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Parse form data
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(compression());
 
 
