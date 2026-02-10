@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import User from "./auth.model.js";
-const notifictionSchema = new mongoose.Schema({
+const notificationSchema = new mongoose.Schema({
     from: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
@@ -28,5 +28,5 @@ const notifictionSchema = new mongoose.Schema({
         ref: "Post",
     }
 }, { timestamps: true })
-const Notification = mongoose.model("Notification", notifictionSchema)
+const Notification = mongoose.model("Notification", notificationSchema)
 export default Notification

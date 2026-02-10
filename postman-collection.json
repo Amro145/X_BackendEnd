@@ -530,7 +530,7 @@
                     "request": {
                         "method": "GET",
                         "url": {
-                            "raw": "http://localhost:8000/api/notifiction/",
+                            "raw": "http://localhost:8000/api/notification/",
                             "protocol": "http",
                             "host": [
                                 "localhost"
@@ -538,7 +538,7 @@
                             "port": "8000",
                             "path": [
                                 "api",
-                                "notifiction",
+                                "notification",
                                 ""
                             ]
                         }
@@ -549,7 +549,7 @@
                     "request": {
                         "method": "DELETE",
                         "url": {
-                            "raw": "http://localhost:8000/api/notifiction/",
+                            "raw": "http://localhost:8000/api/notification/",
                             "protocol": "http",
                             "host": [
                                 "localhost"
@@ -557,7 +557,7 @@
                             "port": "8000",
                             "path": [
                                 "api",
-                                "notifiction",
+                                "notification",
                                 ""
                             ]
                         }
@@ -568,7 +568,7 @@
                     "request": {
                         "method": "DELETE",
                         "url": {
-                            "raw": "http://localhost:8000/api/notifiction/:id",
+                            "raw": "http://localhost:8000/api/notification/:id",
                             "protocol": "http",
                             "host": [
                                 "localhost"
@@ -576,7 +576,7 @@
                             "port": "8000",
                             "path": [
                                 "api",
-                                "notifiction",
+                                "notification",
                                 ":id"
                             ],
                             "variable": [

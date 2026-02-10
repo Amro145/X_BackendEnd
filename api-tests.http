@@ -128,13 +128,13 @@ GET {{baseUrl}}/api/users/followers/674a1b2c3d4e5f6789abcdef
 ###############################################
 
 ### 22. Get All Notifications
-GET {{baseUrl}}/api/notifiction/
+GET {{baseUrl}}/api/notification/
 
 ### 23. Delete All Notifications
-DELETE {{baseUrl}}/api/notifiction/
+DELETE {{baseUrl}}/api/notification/
 
 ### 24. Delete Single Notification (replace :id with actual notification ID)
-DELETE {{baseUrl}}/api/notifiction/674a1b2c3d4e5f6789abcdef
+DELETE {{baseUrl}}/api/notification/674a1b2c3d4e5f6789abcdef
 
 ###############################################
 # TEST ENDPOINT

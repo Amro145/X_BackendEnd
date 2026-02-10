@@ -212,13 +212,13 @@ curl -X PUT http://localhost:8000/api/users/updatePassword \
 
 ```bash
 # Get all notifications
-curl http://localhost:8000/api/notifiction/ -b cookies.txt
+curl http://localhost:8000/api/notification/ -b cookies.txt
 
 # Delete all notifications
-curl -X DELETE http://localhost:8000/api/notifiction/ -b cookies.txt
+curl -X DELETE http://localhost:8000/api/notification/ -b cookies.txt
 
 # Delete single notification (replace NOTIF_ID)
-curl -X DELETE http://localhost:8000/api/notifiction/NOTIF_ID -b cookies.txt
+curl -X DELETE http://localhost:8000/api/notification/NOTIF_ID -b cookies.txt
 ```
 
 ---

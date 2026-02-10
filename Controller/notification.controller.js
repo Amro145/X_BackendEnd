@@ -1,26 +1,24 @@
 import Notification from "../Models/notification.model.js"
 
-export const getNotifictions = async (req, res) => {
+export const getNotifications = async (req, res) => {
 
     try {
         const me = req.user
-        if (!me) return res.status(404).json({ message: "user not found" });
-        const notifiction = await Notification.find({ to: { $in: me._id } }).populate({
+        if (!me) return res.status(404).json({ message: "User not found" });
+        const notifications = await Notification.find({ to: { $in: me._id } }).populate({
             path: "from",
             select: "userName , profilePic"
         })
         // await Notification.updateMany({ to: me._id }, { read: true })
 
-        return res.status(200).json(notifiction)
+        return res.status(200).json(notifications)
     } catch (error) {
-        console.log("error in get notifictions", error);
+        console.log("Error in get notifications:", error);
 
-        return res.status(500).json({ message: "error in get notifictions" })
-
-
+        return res.status(500).json({ message: "Error in get notifications" })
     }
 }
-export const deleteNotifictions = async (req, res) => {
+export const deleteNotifications = async (req, res) => {
 
     const me = req.user
     try {
@@ -28,18 +26,16 @@ export const deleteNotifictions = async (req, res) => {
         return res.status(200).json([])
 
     } catch (error) {
-
-        return res.status(500).json({ message: "Error in  Delete Notifiction" })
-
-
+        console.log("Error in delete notifications:", error);
+        return res.status(500).json({ message: "Error in delete notifications" })
     }
 }
-export const deleteOneNotifiction = async (req, res) => {
+export const deleteOneNotification = async (req, res) => {
 
     try {
-        const notifictionId = req.params.id;
+        const notificationId = req.params.id;
         const me = req.user;
-        const notification = await Notification.findById(notifictionId);
+        const notification = await Notification.findById(notificationId);
 
         if (!notification) {
             return res.status(404).json({ message: "Notification not found" });
@@ -49,15 +45,15 @@ export const deleteOneNotifiction = async (req, res) => {
             return res.status(403).json({ message: "Not authorized" });
         }
 
-        await Notification.findByIdAndDelete(notifictionId);
+        await Notification.findByIdAndDelete(notificationId);
 
         // Fetch updated notifications after deletion
-        const notifications = await Notification.find({ to: { $in: me._id } }).populate({
+        const updatedNotifications = await Notification.find({ to: { $in: me._id } }).populate({
             path: "from",
             select: "userName , profilePic",
         });
 
-        return res.status(200).json(notifications);
+        return res.status(200).json(updatedNotifications);
     } catch (error) {
         console.log("Error in deleting one notification:", error);
         return res.status(500).json({ message: "Error in deleting one notification" });
