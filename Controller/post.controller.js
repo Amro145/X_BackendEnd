@@ -34,16 +34,15 @@ export const createPost = asyncHandler(async (req, res) => {
             image,
         })
 
-        await newPost.save({ session })
+        const savedPost = await newPost.save({ session })
 
         await session.commitTransaction();
 
-        const posts = await Post.find()
-            .sort({ createdAt: -1 })
-            .limit(10)
+        const createdPost = await Post.findById(savedPost._id)
             .populate({ path: "user", select: "-password" })
             .populate({ path: "comment.user", select: "-password" });
-        return res.status(201).json(posts);
+
+        return res.status(201).json(createdPost);
 
     } catch (error) {
         await session.abortTransaction();
@@ -68,12 +67,7 @@ export const deletePost = asyncHandler(async (req, res) => {
         await cloudinary.uploader.destroy(imageId)
     }
     await Post.findByIdAndDelete(post._id)
-    const posts = await Post.find()
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" });
-    return res.status(201).json(posts);
+    return res.status(200).json({ message: "Post deleted successfully", id: post._id });
 })
 
 export const commentOnPost = asyncHandler(async (req, res) => {
@@ -97,11 +91,6 @@ export const commentOnPost = asyncHandler(async (req, res) => {
     post.comment.push(comment);
     await post.save();
 
-    // Return the specified post with comments
-    const updatedPost = await Post.findById(postId)
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" });
-
     // Create a notification for the post owner
     if (me._id.toString() !== post.user.toString()) {
         const newNotification = new Notification({
@@ -114,12 +103,12 @@ export const commentOnPost = asyncHandler(async (req, res) => {
         await newNotification.save();
     }
 
-    const posts = await Post.find()
-        .sort({ createdAt: -1 })
-        .limit(10)
+    // Return the specified post with comments
+    const updatedPost = await Post.findById(postId)
         .populate({ path: "user", select: "-password" })
         .populate({ path: "comment.user", select: "-password" });
-    return res.status(200).json(posts);
+
+    return res.status(200).json(updatedPost);
 })
 
 export const likeUnlike = asyncHandler(async (req, res) => {
@@ -158,11 +147,10 @@ export const likeUnlike = asyncHandler(async (req, res) => {
         }
 
         // Return the updated post
-        const posts = await Post.find()
-            .sort({ createdAt: -1 })
+        const updatedPost = await Post.findById(postId)
             .populate({ path: "user", select: "-password" })
             .populate({ path: "comment.user", select: "-password" });
-        return res.status(200).json(posts);
+        return res.status(200).json(updatedPost);
     } else {
         // If already liked, remove the like
         await Post.findByIdAndUpdate(postId, {
@@ -173,13 +161,10 @@ export const likeUnlike = asyncHandler(async (req, res) => {
             $pull: { likedPosts: postId }
         });
 
-        // Return the updated post
-        const posts = await Post.find()
-            .sort({ createdAt: -1 })
-            .limit(10)
+        const updatedPost = await Post.findById(postId)
             .populate({ path: "user", select: "-password" })
             .populate({ path: "comment.user", select: "-password" });
-        return res.status(200).json(posts);
+        return res.status(200).json(updatedPost);
     }
 })
 

@@ -80,17 +80,19 @@ export const followUnFollowUser = asyncHandler(async (req, res) => {
 
 export const isGetSuggestedUser = asyncHandler(async (req, res) => {
     const currentUser = req.user;
-    const myFollowingList = await User.findById(currentUser._id).select("following");
 
-    const users = await User.aggregate([
+    const suggestedUsers = await User.aggregate([
         {
             $match: {
-                _id: { $ne: currentUser._id }
+                _id: {
+                    $ne: currentUser._id,
+                    $nin: currentUser.following || []
+                }
             }
         },
         {
             $sample: {
-                size: 10
+                size: 4
             }
         },
         {
@@ -99,12 +101,6 @@ export const isGetSuggestedUser = asyncHandler(async (req, res) => {
             }
         }
     ]);
-
-    const filteredUsers = users.filter(user =>
-        !myFollowingList.following.some(fid => fid.toString() === user._id.toString())
-    );
-
-    const suggestedUsers = filteredUsers.slice(0, 4);
 
     return res.status(200).json(suggestedUsers);
 });
