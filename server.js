@@ -28,11 +28,15 @@ app.set('trust proxy', 1); // Trust first proxy (necessary for Vercel/Heroku rat
 const allowedOrigins = [
     'http://localhost:5173',
     'https://x-client-red.vercel.app',
-    'http://localhost:3000' // Keeping this as it's a common dev port
+    'https://www.x-client-red.vercel.app', // Added www variant
+    'http://localhost:3000'
 ];
 
 if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
+    const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, "");
+    if (!allowedOrigins.includes(frontendUrl)) {
+        allowedOrigins.push(frontendUrl);
+    }
 }
 
 app.use(
@@ -41,14 +45,17 @@ app.use(
             // Allow requests with no origin (like mobile apps, curl, Postman)
             if (!origin) return callback(null, true);
 
-            if (allowedOrigins.indexOf(origin) === -1) {
-                const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}. Allowed origins: ${allowedOrigins.join(', ')}.`;
-                return callback(new Error(msg), false);
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            } else {
+                // Instead of throwing error, we just don't allow it. 
+                // This prevents the error handler from sending a non-CORS response.
+                console.log(`CORS blocked for origin: ${origin}`);
+                return callback(null, false);
             }
-            return callback(null, true);
         },
-        credentials: true, // Allow cookies to be sent
-        methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: [
             "Content-Type",
             "Authorization",
@@ -56,6 +63,7 @@ app.use(
             "X-Requested-With",
             "x-access-token"
         ],
+        optionsSuccessStatus: 200, // Explicitly set success status for OPTIONS
     })
 );
 
@@ -63,7 +71,10 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Parse form da
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false, // Disabling CSP for API to avoid interference
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
 }));
 app.use(compression());
 
