@@ -11,32 +11,39 @@ import Notification from "./Models/notification.model.js";
 
 dotenv.config();
 
-const USERS_COUNT = 10;
-const POSTS_COUNT = 30;
+// الإعدادات المطلوبة
+const USERS_COUNT = 50;
+const POSTS_COUNT = 200;
+const SPECIFIC_NAMES = ["john", "ali", "mohamed", "amro"];
 
 const seed = async () => {
     try {
-        console.log("Connecting to Database...");
+        console.log("🚀 البدء في عملية Seed لقاعدة البيانات...");
         const connection = await ConnectToDb();
         if (!connection) {
-            console.error("Failed to connect to DB");
+            console.error("❌ فشل الاتصال بقاعدة البيانات");
             process.exit(1);
         }
 
-        console.log("Clearing existing data...");
+        console.log("🧹 تنظيف البيانات القديمة...");
         await User.deleteMany({});
         await Post.deleteMany({});
         await Notification.deleteMany({});
 
-        console.log("Creating Users...");
+        console.log("👥 إنشاء المستخدمين...");
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash("password123", salt);
 
         const usersData = [];
         for (let i = 0; i < USERS_COUNT; i++) {
+            // استخدام الأسماء المحددة أولاً ثم استخدام faker للبقية
+            const userName = i < SPECIFIC_NAMES.length 
+                ? SPECIFIC_NAMES[i] 
+                : faker.internet.username();
+
             usersData.push({
-                userName: faker.internet.username(),
-                email: faker.internet.email(),
+                userName: userName,
+                email: i < SPECIFIC_NAMES.length ? `${userName}@example.com` : faker.internet.email(),
                 password: hashedPassword,
                 bio: faker.lorem.sentence(),
                 link: faker.internet.url(),
@@ -46,97 +53,78 @@ const seed = async () => {
         }
 
         const createdUsers = await User.insertMany(usersData);
-        console.log(`Created ${createdUsers.length} users.`);
+        console.log(`✅ تم إنشاء ${createdUsers.length} مستخدم بنجاح.`);
 
-        // Create Follows interactions
-        console.log("Creating Follows...");
+        // إنشاء المتابعات (Follows) بشكل جماعي لتحسين الأداء
+        console.log("🔗 إنشاء علاقات المتابعة...");
+        const followNotifications = [];
         for (const user of createdUsers) {
-            // Determine random number of users to follow (0 to 5)
-            const followCount = faker.number.int({ min: 0, max: 5 });
+            const followCount = faker.number.int({ min: 5, max: 15 });
             const potentialFollowees = createdUsers.filter(u => u._id.toString() !== user._id.toString());
             const toFollow = faker.helpers.arrayElements(potentialFollowees, followCount);
 
             for (const targetUser of toFollow) {
-                // Update following/followers lists
                 await User.findByIdAndUpdate(user._id, { $push: { following: targetUser._id } });
                 await User.findByIdAndUpdate(targetUser._id, { $push: { followers: user._id } });
-
-                // Create Notification
-                await Notification.create({
+                
+                followNotifications.push({
                     from: user._id,
                     to: targetUser._id,
                     type: "follow",
                 });
             }
         }
+        await Notification.insertMany(followNotifications);
 
-        // Create Posts
-        console.log("Creating Posts...");
-        const createdPosts = [];
+        // إنشاء المنشورات
+        console.log("📝 إنشاء المنشورات...");
+        const postDataArray = [];
         for (let i = 0; i < POSTS_COUNT; i++) {
             const randomUser = faker.helpers.arrayElement(createdUsers);
-            const hasImage = faker.datatype.boolean();
-
-            const postData = {
+            postDataArray.push({
                 user: randomUser._id,
                 text: faker.lorem.paragraph(),
-                image: hasImage ? faker.image.urlLoremFlickr({ category: 'city' }) : "",
-            };
-
-            // Using save() to trigger the post('save') middleware for notifications
-            const newPost = new Post(postData);
-            await newPost.save();
-            createdPosts.push(newPost);
+                image: faker.datatype.boolean() ? faker.image.urlLoremFlickr({ category: 'tech' }) : "",
+            });
         }
-        console.log(`Created ${createdPosts.length} posts.`);
+        const createdPosts = await Post.insertMany(postDataArray);
+        console.log(`✅ تم إنشاء ${createdPosts.length} منشور.`);
 
-        // Create Likes and Comments
-        console.log("Creating Likes and Comments...");
+        // إنشاء الإعجابات والتعليقات
+        console.log("💬 إضافة التفاعلات (إعجابات وتعليقات)...");
+        const interactionNotifications = [];
+        
         for (const post of createdPosts) {
-            // Determine random number of likes (0 to 8)
-            const likeCount = faker.number.int({ min: 0, max: 8 });
-            const potentialLikers = createdUsers;
-            const likers = faker.helpers.arrayElements(potentialLikers, likeCount);
-
+            // الإعجابات
+            const likers = faker.helpers.arrayElements(createdUsers, faker.number.int({ min: 2, max: 20 }));
             for (const liker of likers) {
-                // Add like to Post
                 await Post.findByIdAndUpdate(post._id, { $push: { likes: liker._id } });
-                // Add post to User's likedPosts
                 await User.findByIdAndUpdate(liker._id, { $push: { likedPosts: post._id } });
 
-                // Create Notification if not self-like
                 if (liker._id.toString() !== post.user.toString()) {
-                    await Notification.create({
+                    interactionNotifications.push({
                         from: liker._id,
-                        to: post.user, // Post owner
+                        to: post.user,
                         type: "like",
                         post: post._id,
                     });
                 }
             }
 
-            // Determine random number of comments (0 to 5)
-            const commentCount = faker.number.int({ min: 0, max: 5 });
-            const commenters = faker.helpers.arrayElements(createdUsers, commentCount);
-
-            for (const commenter of commenters) {
+            // التعليقات
+            const commentCount = faker.number.int({ min: 1, max: 10 });
+            for (let j = 0; j < commentCount; j++) {
+                const commenter = faker.helpers.arrayElement(createdUsers);
                 const commentText = faker.lorem.sentence();
 
-                // Add comment to Post
                 await Post.findByIdAndUpdate(post._id, {
-                    $push: {
-                        comment: {
-                            user: commenter._id,
-                            text: commentText
-                        }
-                    }
+                    $push: { comment: { user: commenter._id, text: commentText } }
                 });
 
-                // Create Notification if not self-comment
                 if (commenter._id.toString() !== post.user.toString()) {
-                    await Notification.create({
+                    interactionNotifications.push({
                         from: commenter._id,
-                        to: post.user, // Post owner
+                        to: post.user,
                         type: "comment",
                         text: commentText,
                         post: post._id,
@@ -145,11 +133,16 @@ const seed = async () => {
             }
         }
 
-        console.log("Database seeded successfully!");
+        // إدخال جميع إشعارات التفاعل دفعة واحدة
+        if (interactionNotifications.length > 0) {
+            await Notification.insertMany(interactionNotifications);
+        }
+
+        console.log("🎯 تمت عملية Seed بنجاح تام!");
         mongoose.disconnect();
         process.exit(0);
     } catch (error) {
-        console.error("Error seeding database:", error);
+        console.error("❌ خطأ أثناء عملية Seed:", error);
         mongoose.disconnect();
         process.exit(1);
     }
