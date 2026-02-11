@@ -1,9 +1,22 @@
 import mongoose from "mongoose";
 
+const commentSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    text: {
+        type: String,
+        required: true,
+    },
+}, { timestamps: true });
+
 const postSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        required: true
     },
     text: {
         type: String,
@@ -17,29 +30,15 @@ const postSchema = new mongoose.Schema({
             ref: "User"
         },
     ],
-    comment: [
-        {
-            user: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User",
-                required: true
-            },
-            text: {
-                type: String,
-                required: true,
-
-            },
-        },
-    ],
+    comment: [commentSchema],
 }, { timestamps: true })
 
-postSchema.post("save", async function (doc, next) {
+postSchema.post("save", async function (doc) {
     try {
-        const session = doc.$session();
         const User = mongoose.model("User");
         const Notification = mongoose.model("Notification");
 
-        const me = await User.findById(doc.user).session(session);
+        const me = await User.findById(doc.user);
         if (me && me.followers && me.followers.length > 0) {
             const notifications = me.followers.map(followerId => ({
                 from: me._id,
@@ -47,15 +46,10 @@ postSchema.post("save", async function (doc, next) {
                 type: "post",
                 post: doc._id,
             }));
-            await Notification.insertMany(notifications, { session });
+            await Notification.insertMany(notifications);
         }
-        // next() is not needed in async post middleware if promise is returned/awaited, but good practice if signature has (doc, next)
     } catch (error) {
         console.error("Error in post save middleware:", error);
-        // In post hooks, throwing error might not stop the main save if it already completed? 
-        // Actually post('save') runs after save. If it fails, does it rollback the transaction?
-        // If we are in a transaction, throwing here should propagate up, and the transaction should be aborted by the caller (controller).
-        throw error;
     }
 });
 
