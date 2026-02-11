@@ -4,55 +4,42 @@ import Post from "../Models/post.model.js"
 import { v2 as cloudinary } from "cloudinary"
 import { asyncHandler } from "../MiddleWare/asyncHandler.js"
 import mongoose from "mongoose"
-import { getCache, setCache, clearCacheByPrefix, delCache } from "../lib/cache.js"
+import { getCache, setCache, clearCacheByPrefix } from "../lib/cache.js"
 
 export const createPost = asyncHandler(async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-        const { text } = req.body
-        let { image } = req.body
-        const myId = req.user._id
+    const { text } = req.body
+    let { image } = req.body
+    const myId = req.user._id
 
-        if (!text && !image) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Post should have text or image" })
-        }
-
-        if (image) {
-            const uploadResponse = await cloudinary.uploader.upload(image)
-            image = uploadResponse.secure_url
-        }
-
-        const newPost = new Post({
-            user: myId,
-            text,
-            image,
-        });
-
-        const savedPost = await newPost.save({ session });
-        await session.commitTransaction();
-
-        // Clear related caches
-        clearCacheByPrefix("posts_all");
-        clearCacheByPrefix("posts_following");
-        clearCacheByPrefix(`posts_user_${myId}`);
-
-        const createdPost = await Post.findById(savedPost._id)
-            .populate("user", "-password")
-            .populate("comment.user", "-password")
-            .exec();
-
-        return res.status(201).json(createdPost);
-
-    } catch (error) {
-        await session.abortTransaction();
-        console.error("Error in createPost:", error);
-        throw error;
-    } finally {
-        session.endSession();
+    if (!text && !image) {
+        return res.status(400).json({ message: "Post should have text or image" })
     }
+
+    if (image) {
+        const uploadResponse = await cloudinary.uploader.upload(image)
+        image = uploadResponse.secure_url
+    }
+
+    const newPost = new Post({
+        user: myId,
+        text,
+        image,
+    });
+
+    await newPost.save();
+
+    // Clear related caches
+    clearCacheByPrefix("posts_all");
+    clearCacheByPrefix("posts_following");
+    clearCacheByPrefix(`posts_user_${myId}`);
+
+    const createdPost = await Post.findById(newPost._id)
+        .populate("user", "-password")
+        .populate("comment.user", "-password")
+        .lean()
+        .exec();
+
+    return res.status(201).json(createdPost);
 })
 
 export const deletePost = asyncHandler(async (req, res) => {
@@ -75,7 +62,7 @@ export const deletePost = asyncHandler(async (req, res) => {
     clearCacheByPrefix("posts_following");
     clearCacheByPrefix(`posts_user_${userId}`);
 
-    return res.status(200).json({ message: "Post deleted successfully", id: post._id });
+    return res.status(200).json({ message: "Post deleted successfully", id: postId });
 })
 
 export const commentOnPost = asyncHandler(async (req, res) => {
@@ -114,6 +101,7 @@ export const commentOnPost = asyncHandler(async (req, res) => {
     const updatedPost = await Post.findById(postId)
         .populate("user", "-password")
         .populate("comment.user", "-password")
+        .lean()
         .exec();
 
     return res.status(200).json(updatedPost);
@@ -154,48 +142,45 @@ export const likeUnlike = asyncHandler(async (req, res) => {
     const updatedPost = await Post.findById(postId)
         .populate("user", "-password")
         .populate("comment.user", "-password")
+        .lean()
         .exec();
 
     return res.status(200).json(updatedPost);
 })
 
 export const getAllPosts = asyncHandler(async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-        const cacheKey = `posts_all_p${page}_l${limit}`;
-        const cachedData = getCache(cacheKey);
+    const cacheKey = `posts_all_p${page}_l${limit}`;
+    const cachedData = getCache(cacheKey);
 
-        if (cachedData) {
-            return res.status(200).json(cachedData);
-        }
-
-        const posts = await Post.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .populate("user", "-password")
-            .populate("comment.user", "-password")
-            .exec();
-
-        const total = await Post.countDocuments();
-
-        const responseData = {
-            posts: posts || [],
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
-            totalPosts: total
-        };
-
-        setCache(cacheKey, responseData, 60);
-
-        return res.status(200).json(responseData);
-    } catch (error) {
-        console.error("Critical error in getAllPosts:", error);
-        return res.status(500).json({ message: error.message || "Internal Server Error" });
+    if (cachedData) {
+        return res.status(200).json(cachedData);
     }
+
+    const posts = await Post.find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate({ path: "user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" })
+        .lean()
+        .exec();
+
+    const total = await Post.countDocuments({});
+
+    const responseData = {
+        posts: posts || [],
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalPosts: total
+    };
+
+    setCache(cacheKey, responseData, 60);
+
+    return res.status(200).json(responseData);
 })
 
 export const getOnePost = asyncHandler(async (req, res) => {
@@ -203,6 +188,7 @@ export const getOnePost = asyncHandler(async (req, res) => {
     const post = await Post.findById(id)
         .populate("user", "-password")
         .populate("comment.user", "-password")
+        .lean()
         .exec();
 
     if (!post) {
@@ -225,6 +211,7 @@ export const getLikedPosts = asyncHandler(async (req, res) => {
         .limit(limit)
         .populate("user", "-password")
         .populate("comment.user", "-password")
+        .lean()
         .exec();
 
     const total = await Post.countDocuments({ _id: { $in: me.likedPosts } });
@@ -261,6 +248,7 @@ export const getFollowingPosts = asyncHandler(async (req, res) => {
         .limit(limit)
         .populate("user", "-password")
         .populate("comment.user", "-password")
+        .lean()
         .exec();
 
     const total = await Post.countDocuments({ user: { $in: myfollowingId } });
@@ -297,6 +285,7 @@ export const getUserPosts = asyncHandler(async (req, res) => {
         .limit(limit)
         .populate("user", "-password")
         .populate("comment.user", "-password")
+        .lean()
         .exec();
 
     const total = await Post.countDocuments({ user: userId });
