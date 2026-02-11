@@ -8,10 +8,21 @@ import { updateProfileSchema } from "../Validators/auth.validator.js";
 
 export const getUsersProfile = asyncHandler(async (req, res) => {
     const { id } = req.params;
+
+    const cacheKey = `user_profile_${id}`;
+    const cachedProfile = getCache(cacheKey);
+
+    if (cachedProfile) {
+        return res.status(200).json(cachedProfile);
+    }
+
     const user = await User.findById(id).select("-password");
     if (!user) {
         return res.status(404).json({ message: "User not found" });
     }
+
+    setCache(cacheKey, user, 600); // Cache for 10 minutes
+
     return res.status(200).json(user);
 });
 
@@ -21,6 +32,9 @@ export const followUnFollowUser = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
         const currentUser = req.user;
+
+        // Clear suggested users cache on follow/unfollow
+        clearCacheByPrefix(`suggested_users_${currentUser._id}`);
 
         const selectedUser = await User.findById(id).session(session);
 
@@ -78,8 +92,17 @@ export const followUnFollowUser = asyncHandler(async (req, res) => {
     }
 });
 
+import { getCache, setCache, clearCacheByPrefix } from "../lib/cache.js";
+
 export const isGetSuggestedUser = asyncHandler(async (req, res) => {
     const currentUser = req.user;
+
+    const cacheKey = `suggested_users_${currentUser._id}`;
+    const cachedUsers = getCache(cacheKey);
+
+    if (cachedUsers) {
+        return res.status(200).json(cachedUsers);
+    }
 
     const suggestedUsers = await User.aggregate([
         {
@@ -101,6 +124,8 @@ export const isGetSuggestedUser = asyncHandler(async (req, res) => {
             }
         }
     ]);
+
+    setCache(cacheKey, suggestedUsers, 300); // Cache for 5 minutes
 
     return res.status(200).json(suggestedUsers);
 });
@@ -145,6 +170,10 @@ export const updateProfile = asyncHandler(async (req, res) => {
         },
         { new: true, runValidators: true }
     ).select("-password");
+
+    // Clear profile cache
+    delCache(`user_profile_${userId}`);
+    clearCacheByPrefix("posts_all"); // User info in posts might be outdated
 
     return res.status(200).json(updatedUser);
 });
