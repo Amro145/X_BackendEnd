@@ -4,9 +4,8 @@ import Post from "../Models/post.model.js"
 import { v2 as cloudinary } from "cloudinary"
 import { asyncHandler } from "../MiddleWare/asyncHandler.js"
 import mongoose from "mongoose"
+import { getCache, setCache, clearCacheByPrefix, delCache } from "../lib/cache.js"
 
-
-import { clearCacheByPrefix } from "../lib/cache.js"
 
 export const createPost = asyncHandler(async (req, res) => {
     const session = await mongoose.startSession();
@@ -73,7 +72,14 @@ export const deletePost = asyncHandler(async (req, res) => {
         const imageId = post.image.split("/").pop().split(".")[0]
         await cloudinary.uploader.destroy(imageId)
     }
+    const userId = post.user;
     await Post.findByIdAndDelete(post._id)
+
+    // Clear caches
+    clearCacheByPrefix("posts_all");
+    clearCacheByPrefix("posts_following");
+    clearCacheByPrefix(`posts_user_${userId}`);
+
     return res.status(200).json({ message: "Post deleted successfully", id: post._id });
 })
 
@@ -112,6 +118,7 @@ export const commentOnPost = asyncHandler(async (req, res) => {
 
     // Clear caches
     clearCacheByPrefix("posts_all");
+    clearCacheByPrefix("posts_following");
     clearCacheByPrefix(`posts_user_${post.user}`);
 
     // Return the specified post with comments
@@ -168,6 +175,7 @@ export const likeUnlike = asyncHandler(async (req, res) => {
 
     // Clear caches
     clearCacheByPrefix("posts_all");
+    clearCacheByPrefix("posts_following");
     clearCacheByPrefix(`posts_user_${post.user}`);
 
     // Return the updated post
@@ -178,7 +186,6 @@ export const likeUnlike = asyncHandler(async (req, res) => {
     return res.status(200).json(updatedPost);
 })
 
-import { getCache, setCache } from "../lib/cache.js"
 
 export const getAllPosts = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
@@ -192,16 +199,19 @@ export const getAllPosts = asyncHandler(async (req, res) => {
         return res.status(200).json(cachedData);
     }
 
-    const posts = await Post.find()
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" });
+    const [posts, total] = await Promise.all([
+        Post.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate({ path: "user", select: "-password" })
+            .populate({ path: "comment.user", select: "-password" })
+            .exec(),
+        Post.countDocuments()
+    ]);
 
-    const total = await Post.countDocuments();
     const responseData = {
-        posts,
+        posts: posts || [],
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalPosts: total
@@ -214,11 +224,12 @@ export const getAllPosts = asyncHandler(async (req, res) => {
 
 export const getOnePost = asyncHandler(async (req, res) => {
     const { id } = req.params
-    const post = await Post.findById(id).sort({ createdAt: -1 })
+    const post = await Post.findById(id)
         .populate({ path: "user", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" })
+        .populate({ path: "comment.user", select: "-password" });
+
     if (!post) {
-        return res.status(400).json({ message: "Invalid Id" })
+        return res.status(404).json({ message: "Post not found" })
     }
     return res.status(200).json(post)
 })
@@ -231,14 +242,26 @@ export const getLikedPosts = asyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const posts = await Post.find({ _id: { $in: me.likedPosts } })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "likes", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" })
-    return res.status(200).json(posts)
+    const [posts, total] = await Promise.all([
+        Post.find({ _id: { $in: me.likedPosts } })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate({ path: "user", select: "-password" })
+            .populate({ path: "likes", select: "-password" })
+            .populate({ path: "comment.user", select: "-password" })
+            .exec(),
+        Post.countDocuments({ _id: { $in: me.likedPosts } })
+    ]);
+
+    const responseData = {
+        posts: posts || [],
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalPosts: total
+    };
+
+    return res.status(200).json(responseData)
 })
 
 export const getFollowingPosts = asyncHandler(async (req, res) => {
@@ -256,18 +279,29 @@ export const getFollowingPosts = asyncHandler(async (req, res) => {
         return res.status(200).json(cachedData);
     }
 
-    const myfollowingId = me.following
-    const followingPosts = await Post.find({ user: { $in: myfollowingId } })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "likes", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" })
+    const myfollowingId = me.following || [];
+    const [followingPosts, total] = await Promise.all([
+        Post.find({ user: { $in: myfollowingId } })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate({ path: "user", select: "-password" })
+            .populate({ path: "likes", select: "-password" })
+            .populate({ path: "comment.user", select: "-password" })
+            .exec(),
+        Post.countDocuments({ user: { $in: myfollowingId } })
+    ]);
 
-    setCache(cacheKey, followingPosts, 60); // Cache for 1 minute
+    const responseData = {
+        posts: followingPosts || [],
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalPosts: total
+    };
 
-    return res.status(200).json(followingPosts)
+    setCache(cacheKey, responseData, 60); // Cache for 1 minute
+
+    return res.status(200).json(responseData)
 })
 
 export const getUserPosts = asyncHandler(async (req, res) => {
@@ -286,15 +320,26 @@ export const getUserPosts = asyncHandler(async (req, res) => {
         return res.status(200).json(cachedData);
     }
 
-    const userPosts = await Post.find({ user: { $in: user._id } })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate({ path: "user", select: "-password" })
-        .populate({ path: "likes", select: "-password" })
-        .populate({ path: "comment.user", select: "-password" })
+    const [userPosts, total] = await Promise.all([
+        Post.find({ user: userId })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate({ path: "user", select: "-password" })
+            .populate({ path: "likes", select: "-password" })
+            .populate({ path: "comment.user", select: "-password" })
+            .exec(),
+        Post.countDocuments({ user: userId })
+    ]);
 
-    setCache(cacheKey, userPosts, 120); // Cache for 2 minutes
+    const responseData = {
+        posts: userPosts || [],
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalPosts: total
+    };
 
-    return res.status(200).json(userPosts)
+    setCache(cacheKey, responseData, 120); // Cache for 2 minutes
+
+    return res.status(200).json(responseData)
 })
