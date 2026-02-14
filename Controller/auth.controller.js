@@ -49,9 +49,13 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  res.cookie("jwt", "", { maxAge: 0 })
-  req.user = null;
-  return res.status(200).json({ message: "Logout Successfully" })
+  res.cookie("jwt", "", {
+    maxAge: 0,
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
+    secure: process.env.NODE_ENV !== "development",
+  });
+  return res.status(200).json({ message: "Logout Successfully" });
 });
 
 export const getMe = asyncHandler(async (req, res) => {
