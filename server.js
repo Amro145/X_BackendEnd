@@ -11,6 +11,8 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import compression from "compression";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swagger.js";
 
 dotenv.config();
 
@@ -77,6 +79,9 @@ app.get("/", (req, res) => {
 app.get("/test", (req, res) => {
     res.send("Hello from server");
 });
+
+// Swagger Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 // Connect to DB for protected routes
