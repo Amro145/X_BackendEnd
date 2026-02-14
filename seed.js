@@ -34,11 +34,21 @@ const seed = async () => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash("password123", salt);
 
-        const usersData = [];
+        const usersData = [
+            {
+                userName: "Dianne.Kub92",
+                email: "Dianne.Kub92@gmail.com",
+                password: hashedPassword,
+                bio: faker.lorem.sentence(),
+                link: faker.internet.url(),
+                profilePic: faker.image.avatar(),
+                coverPic: faker.image.urlLoremFlickr({ category: 'nature' }),
+            }
+        ];
         for (let i = 0; i < USERS_COUNT; i++) {
             // استخدام الأسماء المحددة أولاً ثم استخدام faker للبقية
-            const userName = i < SPECIFIC_NAMES.length 
-                ? SPECIFIC_NAMES[i] 
+            const userName = i < SPECIFIC_NAMES.length
+                ? SPECIFIC_NAMES[i]
                 : faker.internet.username();
 
             usersData.push({
@@ -66,7 +76,7 @@ const seed = async () => {
             for (const targetUser of toFollow) {
                 await User.findByIdAndUpdate(user._id, { $push: { following: targetUser._id } });
                 await User.findByIdAndUpdate(targetUser._id, { $push: { followers: user._id } });
-                
+
                 followNotifications.push({
                     from: user._id,
                     to: targetUser._id,
@@ -93,7 +103,7 @@ const seed = async () => {
         // إنشاء الإعجابات والتعليقات
         console.log("💬 إضافة التفاعلات (إعجابات وتعليقات)...");
         const interactionNotifications = [];
-        
+
         for (const post of createdPosts) {
             // الإعجابات
             const likers = faker.helpers.arrayElements(createdUsers, faker.number.int({ min: 2, max: 20 }));

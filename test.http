@@ -17,8 +17,7 @@ POST {{baseUrl}}/api/auth/signup
 Content-Type: application/json
 
 {
-    "userName": "testuser_{{$timestamp}}",
-    "email": "test_{{$timestamp}}@example.com",
+"user"
     "password": "password123"
 }
 
