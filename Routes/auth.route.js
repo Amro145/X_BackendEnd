@@ -93,6 +93,6 @@ Router.post("/login", login);
  *       200:
  *         description: Logout successful
  */
-Router.get("/logout", logout);
+Router.post("/logout", logout);
 
 export default Router;
