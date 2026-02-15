@@ -49,16 +49,19 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  res.cookie("jwt", "", {
-    maxAge: 0,
+  res.clearCookie("jwt", {
     httpOnly: true,
     sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
     secure: process.env.NODE_ENV !== "development",
+    path: "/",
   });
   return res.status(200).json({ message: "Logout Successfully" });
 });
 
 export const getMe = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password")
-  return res.status(200).json(user)
+  const user = await User.findById(req.user._id).select("-password");
+  if (!user) {
+    return res.status(401).json({ message: "User not found" });
+  }
+  return res.status(200).json(user);
 });

@@ -19,7 +19,6 @@ export const protectRoute = async (req, res, next) => {
         next()
     } catch (error) {
         console.log("error in protected route", error);
-        return res.status(500).json({ message: "Error in Protect Route" })
-
+        return res.status(401).json({ message: "Unauthorized: Invalid or expired token" })
     }
 }
